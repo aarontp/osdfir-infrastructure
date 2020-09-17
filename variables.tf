@@ -37,3 +37,11 @@ variable "infrastructure_id" {
   description = "Unique indentifier for the deployment (default: random ID)"
   default     = ""
 }
+
+variable "turbinia_docker_image_server" {
+  description = "The docker image to use for the Turbinia Server"
+}
+
+variable "turbinia_docker_image_worker" {
+  description = "The docker image to use for the Turbinia Worker"
+}
