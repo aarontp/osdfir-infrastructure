@@ -40,8 +40,10 @@ variable "infrastructure_id" {
 
 variable "turbinia_docker_image_server" {
   description = "The docker image to use for the Turbinia Server"
+  default = "gcr.io/oss-forensics-registry/turbinia/turbinia-server:latest"
 }
 
 variable "turbinia_docker_image_worker" {
   description = "The docker image to use for the Turbinia Worker"
+  default = "gcr.io/oss-forensics-registry/turbinia/turbinia-worker:latest"
 }

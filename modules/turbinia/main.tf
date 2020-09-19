@@ -48,6 +48,7 @@ resource "google_pubsub_topic" "pubsub-topic-psq" {
 resource "google_storage_bucket" "output-bucket" {
   name          = "turbinia-${var.infrastructure_id}"
   depends_on    = [google_project_service.services]
+  uniform_bucket_level_access = true
   force_destroy = true
 }
 
@@ -126,7 +127,7 @@ locals {
 
 # # Turbinia server
 resource "google_compute_instance" "turbinia-server" {
-  count        = "${var.turbinia_server_count}"
+  count        = var.turbinia_server_count
   name         = "turbinia-server-${var.infrastructure_id}"
   machine_type = var.turbinia_server_machine_type
   zone         = var.gcp_zone

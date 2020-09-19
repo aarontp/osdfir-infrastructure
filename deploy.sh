@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ -z "$DEVSHELL_PROJECT_ID" ]; then
   echo "ERROR: Project ID unknown - please restart cloudshell"
   exit 1
@@ -11,6 +13,7 @@ if [[ "$*" == *--no-timesketch* ]] ; then
   echo "--no-timesketch found: Not deploying Timesketch."
 fi
 
+# TODO: Better flag handling
 DOCKER_IMAGE=""
 if [[ "$*" == *--build-release-test* ]] ; then
   DOCKER_IMAGE="-var turbinia_docker_image_server=gcr.io/oss-forensics-registry/turbinia/turbinia-server-release-test:latest"
@@ -84,15 +87,6 @@ else
   terraform apply --target=module.turbinia -var gcp_project=$DEVSHELL_PROJECT_ID $DOCKER_IMAGE -auto-approve
 fi
 
-# Turbinia
-cd ~
-virtualenv --python=/usr/bin/python2.7 turbinia
-source turbinia/bin/activate
-
-pip install turbinia 1>/dev/null
-cd $DIR
-terraform output turbinia-config > ~/.turbiniarc
-sed -i s/"\/var\/log\/turbinia\/turbinia.log"/"\/tmp\/turbinia.log"/ ~/.turbiniarc
 
 if [ $TIMESKETCH -eq "1" ] ; then
   url="$(terraform output timesketch-server-url)"
@@ -116,6 +110,21 @@ if [ $TIMESKETCH -eq "1" ] ; then
   echo "Password: ${pass}"
   echo "****************************************************************************"
 fi
+
+
+# Turbinia
+cd ~
+# TODO: Either add checks here, or possibly add a suffix with the infrastructure
+# ID here.
+virtualenv --python=/usr/bin/python2.7 turbinia
+echo "Activating Turbinia virtual environment"
+source turbinia/bin/activate
+
+echo "Installing Turbinia client"
+pip install turbinia 1>/dev/null
+cd $DIR
+terraform output turbinia-config > ~/.turbiniarc
+sed -i s/"\/var\/log\/turbinia\/turbinia.log"/"\/tmp\/turbinia.log"/ ~/.turbiniarc
 
 echo
 echo "Deployment done"
