@@ -64,6 +64,10 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
+# Enable "Private Google Access" on default VPC network so GCE instances without 
+# an External IP can access Google log and monitoring service APIs.
+gcloud compute networks subnets update default --region=us-central1 --enable-private-ip-google-access
+
 # Deploy cloud functions
 gcloud -q services enable cloudfunctions.googleapis.com
 gcloud -q services enable cloudbuild.googleapis.com

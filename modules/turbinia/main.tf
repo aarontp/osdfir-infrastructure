@@ -156,7 +156,6 @@ resource "google_compute_instance" "turbinia-server" {
 
   network_interface {
     network = "default"
-    access_config {}
   }
 }
 
@@ -190,6 +189,5 @@ resource "google_compute_instance" "turbinia-worker" {
 
   network_interface {
     network = "default"
-    access_config {}
   }
 }
