@@ -7,6 +7,8 @@ if [ -z "$DEVSHELL_PROJECT_ID" ]; then
   exit 1
 fi
 
+REGION="us-central1"
+
 TIMESKETCH="1"
 if [[ "$*" == *--no-timesketch* ]] ; then
   TIMESKETCH="0"
@@ -66,7 +68,7 @@ cd $DIR
 
 # Enable "Private Google Access" on default VPC network so GCE instances without 
 # an External IP can access Google log and monitoring service APIs.
-gcloud compute networks subnets update default --region=us-central1 --enable-private-ip-google-access
+gcloud compute networks subnets update default --region=$REGION --enable-private-ip-google-access
 
 # Deploy cloud functions
 gcloud -q services enable cloudfunctions.googleapis.com
