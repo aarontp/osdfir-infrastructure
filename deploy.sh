@@ -3,7 +3,7 @@
 set -e
 
 if [ -z "$DEVSHELL_PROJECT_ID" ]; then
-  echo "ERROR: Project ID unknown - please restart cloudshell"
+  echo "ERROR: Project ID unknown - please restart Google Cloudshell or set DEVSHELL_PROJECT_ID when running outside of Cloudshell."
   exit 1
 fi
 
