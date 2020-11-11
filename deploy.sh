@@ -21,11 +21,18 @@ fi
 
 if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   DEVSHELL_PROJECT_ID=$(gcloud config get-value project)
+  ERRMSG="ERROR: Could not get configured project. Please either restart "
+  ERRMSG+="Google Cloudshell, or set configured project with "
+  ERRMSG+="'gcloud config set project PROJECT' when running outside of Cloudshell."
+  if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
+    echo $ERRMSG
+    exit 1
+  fi
   echo "Environment variable \$DEVSHELL_PROJECT_ID not set"
   echo -n "Do you want to use $DEVSHELL_PROJECT_ID as the target project? (y / n) > "
   read response
   if [[ $response != "y" && $response != "Y" ]] ; then
-    echo "ERROR: Could not determine Project ID - please restart cloudshell"
+    echo $ERRMSG
     exit 1
   fi
 fi
