@@ -28,7 +28,8 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
     echo $ERRMSG
     exit 1
   fi
-  echo "Environment variable \$DEVSHELL_PROJECT_ID not set"
+  echo "Environment variable \$DEVSHELL_PROJECT_ID was not set at start time "
+  echo "so attempting to get project config from gcloud config."
   echo -n "Do you want to use $DEVSHELL_PROJECT_ID as the target project? (y / n) > "
   read response
   if [[ $response != "y" && $response != "Y" ]] ; then
@@ -106,9 +107,9 @@ while true; do
     echo "All Cloud Functions deployed"
     break
   fi
-  gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy gettasks --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs8 --trigger-http --memory 256MB --timeout 60s
-  gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetask --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs8 --trigger-http --memory 256MB --timeout 60s
-  gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetasks  --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs8 --trigger-http --memory 256MB --timeout 60s
+  gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy gettasks --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs10 --trigger-http --memory 256MB --timeout 60s
+  gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetask --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs10 --trigger-http --memory 256MB --timeout 60s
+  gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetasks  --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs10 --trigger-http --memory 256MB --timeout 60s
 done
 
 
