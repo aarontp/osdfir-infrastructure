@@ -36,14 +36,14 @@ done
 
 # --- MAIN ---
 apt-get update
-apt-get -y install python-pip
+apt-get -y install python3-pip
 
 # Install Turbinia
-pip install ${pip_source}
+pip3 install ${pip_source}
 
 # Turbinia needs a recent version of urllib3
-pip install urllib3 --upgrade
-pip install cryptography --upgrade
+pip3 install urllib3 --upgrade
+pip3 install cryptography --upgrade
 
 # Install Plaso
 add-apt-repository -y ppa:gift/stable
@@ -51,7 +51,7 @@ apt-get -y install python-plaso plaso-tools
 
 # Install Hindsight
 # TODO: Merge with turbinia worker dependencies.
-pip install pyhindsight
+pip3 install pyhindsight
 
 # Create system user
 useradd -r -s /bin/nologin -G disk turbinia

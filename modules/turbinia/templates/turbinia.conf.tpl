@@ -16,7 +16,7 @@ DEBUG_TASKS         = False
 DOCKER_ENABLED = False
 
 # Any jobs added to this list will disable it from being used.
-DISABLED_JOBS = []
+DISABLED_JOBS = ['VolatilityJob']
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{
@@ -66,22 +66,22 @@ DEPENDENCIES = [{
 }]
 
 # GCP
-TURBINIA_PROJECT    = '${project}'
-TURBINIA_REGION     = '${region}'
-TURBINIA_ZONE       = '${zone}'
-BUCKET_NAME         = '${bucket}'
-PSQ_TOPIC           = '${pubsub_topic_psq}'
-PUBSUB_TOPIC        = '${pubsub_topic}'
-GCS_OUTPUT_PATH     = 'gs://${bucket}/output'
-STACKDRIVER_LOGGING = False
-STACKDRIVER_TRACEBACK = False
+TURBINIA_PROJECT      = '${project}'
+TURBINIA_REGION       = '${region}'
+TURBINIA_ZONE         = '${zone}'
+BUCKET_NAME           = '${bucket}'
+PSQ_TOPIC             = '${pubsub_topic_psq}'
+PUBSUB_TOPIC          = '${pubsub_topic}'
+GCS_OUTPUT_PATH       = 'gs://${bucket}/output'
+STACKDRIVER_LOGGING   = True
+STACKDRIVER_TRACEBACK = True
 
 # Celery
-CELERY_BROKER       = None
-CELERY_BACKEND      = None
-KOMBU_BROKER        = None
-KOMBU_CHANNEL       = None
-KOMBU_DURABLE       = True
-REDIS_HOST          = None
-REDIS_PORT          = None
-REDIS_DB            = None
+CELERY_BROKER         = None
+CELERY_BACKEND        = None
+KOMBU_BROKER          = None
+KOMBU_CHANNEL         = None
+KOMBU_DURABLE         = True
+REDIS_HOST            = None
+REDIS_PORT            = None
+REDIS_DB              = None

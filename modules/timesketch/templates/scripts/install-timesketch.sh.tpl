@@ -184,7 +184,7 @@ Description=Google Cloud Storage importer for Timesketch
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /usr/local/bin/gcs-importer.py --project ${gcp_project} --bucket turbinia-${infrastructure_id} --subscription gcs-subscription --output /tmp/
+ExecStart=/usr/bin/python3 /usr/local/bin/gcs-importer.py --project ${gcp_project} --bucket turbinia-${infrastructure_id} --subscription gcs-subscription-${infrastructure_id} --output /tmp/
 
 [Install]
 WantedBy=multi-user.target
