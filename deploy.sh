@@ -124,7 +124,7 @@ fi
 cd ~
 # TODO: Either add checks here, or possibly add a suffix with the infrastructure
 # ID here.
-virtualenv --python=/usr/bin/python3.7 turbinia
+virtualenv --python=/usr/bin/python3 turbinia
 echo "Activating Turbinia virtual environment"
 source turbinia/bin/activate
 
