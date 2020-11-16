@@ -54,7 +54,7 @@ resource "google_storage_bucket" "output-bucket" {
 
 # Bucket notfication for GCS importer
 resource "google_pubsub_topic" "pubsub-topic-gcs" {
-  name = "turbinia-gcs"
+  name = "turbinia-gcs-${var.infrastructure_id}"
   depends_on  = [google_project_service.services]
 }
 
@@ -79,7 +79,7 @@ resource "google_storage_notification" "notification" {
 }
 
 resource "google_pubsub_subscription" "gcs-subscription" {
-  name  = "gcs-subscription"
+  name  = "turbinia-gcs-subscription-${var.infrastructure_id}"
   topic = google_pubsub_topic.pubsub-topic-gcs.name
   message_retention_duration = "1200s"
   retain_acked_messages      = true
@@ -89,15 +89,147 @@ resource "google_pubsub_subscription" "gcs-subscription" {
   }
 }
 
-# Create datastore index
-data "local_file" "datastore-index-file" {
-  filename = "${path.module}/data/index.yaml"
-  depends_on  = [google_project_service.services]
+resource "google_datastore_index" "index1" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
 }
 
-resource "null_resource" "cloud-datastore-create-index" {
-  provisioner "local-exec" {
-    command = "gcloud -q datastore indexes create ${data.local_file.datastore-index-file.filename} --project=${var.gcp_project}"
+resource "google_datastore_index" "index2" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "successfull"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index3" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "request_id"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index4" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "id"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index5" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "request_id"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "successful"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index6" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "user"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index7" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "id"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "user"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index8" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "instance"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "request_id"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "user"
+    direction = "DESCENDING"
+  }
+}
+
+resource "google_datastore_index" "index9" {
+  kind = "TurbiniaTask"
+  properties {
+    name = "last_update"
+    direction = "DESCENDING"
+  }
+  properties {
+    name = "task_id"
+    direction = "DESCENDING"
   }
 }
 
