@@ -3,7 +3,7 @@
 set -e
 
 TURBINIA_CONFIG="$HOME/.turbiniarc"
-TURBINIA_REGION=us-central
+TURBINIA_REGION=us-central1
 
 if [[ -z "$( which terraform )" ]] ; then
   echo "Terraform CLI not found.  Please follow the instructions at "
@@ -39,6 +39,7 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
 fi
 
 echo "Deploying to project $DEVSHELL_PROJECT_ID"
+
 
 TIMESKETCH="1"
 if [[ "$*" == *--no-timesketch* ]] ; then
@@ -91,10 +92,16 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
+
 # Create AppEngine app, if not already exists, in order to activate datastore
 # if ! gcloud services --project $DEVSHELL_PROJECT_ID list | grep appengine; then
   # gcloud app --project $DEVSHELL_PROJECT_ID create --region=$TURBINIA_REGION
 # fi
+
+# Enable "Private Google Access" on default VPC network so GCE instances without 
+# an External IP can access Google log and monitoring service APIs.
+gcloud compute networks subnets update default --region=$TURBINIA_REGION --enable-private-ip-google-access
+
 
 # Deploy cloud functions
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable cloudfunctions.googleapis.com
