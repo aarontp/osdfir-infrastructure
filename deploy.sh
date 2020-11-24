@@ -57,6 +57,10 @@ elif [[ "$*" == *--build-dev* ]] ; then
   DOCKER_IMAGE="-var turbinia_docker_image_server=gcr.io/oss-forensics-registry/turbinia/turbinia-server-dev:latest"
   DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=gcr.io/oss-forensics-registry/turbinia/turbinia-worker-dev:latest"
   echo "Setting docker image to $DOCKER_IMAGE"
+elif [[ "$*" == *--build-experimental* ]] ; then
+  DOCKER_IMAGE="-var turbinia_docker_image_server=gcr.io/oss-forensics-registry/turbinia/turbinia-server-experimental:latest"
+  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=gcr.io/oss-forensics-registry/turbinia/turbinia-worker-experimental:latest"
+  echo "Setting docker image to $DOCKER_IMAGE"
 fi
 
 # Use local `gcloud auth` credentials rather than creating new Service Account.
@@ -77,6 +81,7 @@ if [[ "$*" != *--use-gcloud-auth* ]] ; then
   gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
   gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
   gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
 
   # Create and fetch the service account key
   echo "Fetch and store service account key"
@@ -100,7 +105,10 @@ cd $DIR
 
 # Enable "Private Google Access" on default VPC network so GCE instances without 
 # an External IP can access Google log and monitoring service APIs.
-gcloud compute networks subnets update default --region=$TURBINIA_REGION --enable-private-ip-google-access
+gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update default --region=$TURBINIA_REGION --enable-private-ip-google-access
+# Allow IAP so that we can still connect to these via gcloud and cloud console.
+# https://cloud.google.com/iap/docs/using-tcp-forwarding#tunneling_with_ssh
+gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules create allow-ssh-ingress-from-iap --direction=INGRESS --action=allow --rules=tcp:22 --source-ranges=35.235.240.0/20
 
 
 # Deploy cloud functions
@@ -154,16 +162,21 @@ fi
 
 
 # Turbinia
-cd ~
-# TODO: Either add checks here, or possibly add a suffix with the infrastructure
-# ID here.
-virtualenv --python=/usr/bin/python3 turbinia
-echo "Activating Turbinia virtual environment"
-source turbinia/bin/activate
+if [[ "$*" == *--no-virtualenv* ]] ; then
+  echo "Not creating virtualenv"
+else
+  echo "Creating virtualenv in ~/turbinia"
+  cd ~
+  # TODO: Either add checks here, or possibly add a suffix with the infrastructure
+  # ID here.
+  virtualenv --python=/usr/bin/python3 turbinia
+  echo "Activating Turbinia virtual environment"
+  source turbinia/bin/activate
 
-echo "Installing Turbinia client"
-pip install turbinia 1>/dev/null
-cd $DIR
+  echo "Installing Turbinia client"
+  pip install turbinia 1>/dev/null
+  cd $DIR
+fi
 
 if [[ -a $TURBINIA_CONFIG ]] ; then
   backup_file="${TURBINIA_CONFIG}.$( date +%s )"

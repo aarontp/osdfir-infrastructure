@@ -65,6 +65,10 @@ DEPENDENCIES = [{
     'docker_image': None
 }]
 
+# Prometheus monitoring config
+PROMETHEUS_ADDR = '0.0.0.0'
+PROMETHEUS_PORT = 8000
+
 # GCP
 TURBINIA_PROJECT      = '${project}'
 TURBINIA_REGION       = '${region}'
