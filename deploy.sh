@@ -50,16 +50,16 @@ fi
 # TODO: Better flag handling
 DOCKER_IMAGE=""
 if [[ "$*" == *--build-release-test* ]] ; then
-  DOCKER_IMAGE="-var turbinia_docker_image_server=gcr.io/oss-forensics-registry/turbinia/turbinia-server-release-test:latest"
-  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=gcr.io/oss-forensics-registry/turbinia/turbinia-worker-release-test:latest"
+  DOCKER_IMAGE="-var turbinia_docker_image_server=us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-release-test:latest"
+  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-release-test:latest"
   echo "Setting docker image to $DOCKER_IMAGE"
 elif [[ "$*" == *--build-dev* ]] ; then
-  DOCKER_IMAGE="-var turbinia_docker_image_server=gcr.io/oss-forensics-registry/turbinia/turbinia-server-dev:latest"
-  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=gcr.io/oss-forensics-registry/turbinia/turbinia-worker-dev:latest"
+  DOCKER_IMAGE="-var turbinia_docker_image_server=us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest"
+  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest"
   echo "Setting docker image to $DOCKER_IMAGE"
 elif [[ "$*" == *--build-experimental* ]] ; then
-  DOCKER_IMAGE="-var turbinia_docker_image_server=gcr.io/oss-forensics-registry/turbinia/turbinia-server-experimental:latest"
-  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=gcr.io/oss-forensics-registry/turbinia/turbinia-worker-experimental:latest"
+  DOCKER_IMAGE="-var turbinia_docker_image_server=us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-experimental:latest"
+  DOCKER_IMAGE="$DOCKER_IMAGE -var turbinia_docker_image_worker=us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-experimental:latest"
   echo "Setting docker image to $DOCKER_IMAGE"
 fi
 
