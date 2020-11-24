@@ -310,7 +310,7 @@ resource "google_compute_instance" "turbinia-worker" {
   }
 
   metadata = {
-    gce-container-declaration = "spec:\n  containers:\n    - name: turbinia-worker\n      image: '${var.turbinia_docker_image_worker}'\n      volumeMounts:\n        - name: host-path-0\n          mountPath: /dev/\n          readOnly: true\n      securityContext:\n        privileged: true\n      env:\n        - name: TURBINIA_CONF\n          value: \"${local.turbinia_config}\"\n      stdin: true\n      tty: true\n  restartPolicy: Always\n  volumes:\n    - name: host-path-0\n      hostPath:\n        path: /dev\n\n"
+    gce-container-declaration = "spec:\n  containers:\n    - name: turbinia-worker\n      image: '${var.turbinia_docker_image_worker}'\n      volumeMounts:\n        - name: host-path-0\n          mountPath: /dev/\n          readOnly: true\n        - name: host-path-1\n          mountPath: /var/lib/turbinia\n          readOnly: false\n      securityContext:\n        privileged: true\n      env:\n        - name: TURBINIA_CONF\n          value: \"${local.turbinia_config}\"\n      stdin: true\n      tty: true\n  restartPolicy: Always\n  volumes:\n    - name: host-path-0\n      hostPath:\n        path: /dev\n    - name: host-path-1\n      hostPath:\n        path: /var/lib/turbinia\n\n"
     google-logging-enabled = "true"
     google-monitoring-enabled = "true"
   }
