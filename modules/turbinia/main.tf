@@ -283,7 +283,7 @@ resource "google_compute_instance" "turbinia-server" {
   }
 
   service_account {
-    scopes = ["compute-ro", "storage-rw", "pubsub", "datastore"]
+    scopes = ["compute-ro", "storage-rw", "pubsub", "datastore", "logging-write"]
   }
 
   network_interface {
@@ -316,7 +316,7 @@ resource "google_compute_instance" "turbinia-worker" {
   }
 
   service_account {
-    scopes = ["compute-rw", "storage-rw", "pubsub", "datastore", "cloud-platform"]
+    scopes = ["compute-rw", "storage-rw", "pubsub", "datastore", "cloud-platform", "logging-write"]
   }
 
   network_interface {
