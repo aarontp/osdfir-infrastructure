@@ -258,6 +258,29 @@ locals {
 }
 
 # # Turbinia server
+module "gce-server-container" {
+  source = "terraform-google-modules/container-vm/google"
+
+  container = {
+    name    = "turbinia-server"
+    image   = var.turbinia_docker_image_server
+
+    securityContext = {
+      privileged : false
+    }
+    env = [
+      {
+        name  = "TURBINIA_CONF"
+        value = local.turbinia_config
+      }
+    ]
+    tty : true
+    stdin : true
+  }
+
+  restart_policy = "Always"
+}
+
 resource "google_compute_instance" "turbinia-server" {
   count        = var.turbinia_server_count
   name         = "turbinia-server-${var.infrastructure_id}"
@@ -277,9 +300,13 @@ resource "google_compute_instance" "turbinia-server" {
   }
 
   metadata = {
-    gce-container-declaration = "spec:\n  containers:\n    - name: turbinia-server\n      image: '${var.turbinia_docker_image_server}'\n      securityContext:\n        privileged: false\n      env:\n        - name: TURBINIA_CONF\n          value: \"${local.turbinia_config}\"\n      stdin: true\n      tty: true\n  restartPolicy: Always\n\n"
+    gce-container-declaration = module.gce-server-container.metadata_value
     google-logging-enabled = "true"
     google-monitoring-enabled = "true"
+  }
+
+  labels = {
+    container-vm = module.gce-server-container.vm_container_label
   }
 
   service_account {
@@ -289,6 +316,63 @@ resource "google_compute_instance" "turbinia-server" {
   network_interface {
     network = "default"
   }
+}
+
+
+# # Turbinia worker
+resource "google_compute_disk" "pd" {
+  count   = var.turbinia_worker_count
+  project = var.project_id
+  name    = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
+  type    = "pd-standard"
+  zone    = var.gcp_zone
+  size    = 1000
+}
+
+module "gce-worker-container" {
+  source = "terraform-google-modules/container-vm/google"
+
+  container = {
+    name    = "turbinia-worker"
+    image   = var.turbinia_docker_image_worker
+    volumeMounts = [
+      {
+        name: "host-path-0"
+        mountPath: "/dev"
+        readOnly: true
+      }, {
+        name: "data-disk-0"
+        mountPath: "/var/lib/turbinia"
+        readOnly: false
+      }
+    ]
+
+    securityContext = {
+      privileged : true
+    }
+    env = [
+      {
+        name  = "TURBINIA_CONF"
+        value = local.turbinia_config
+      }
+    ]
+    tty : true
+    stdin : true
+  }
+
+  restart_policy = "Always"
+  volumes = [
+    {
+      name = "host-path-0"
+      hostPath = {path="/dev"}
+    }, {
+      name = "data-disk-0"
+      gcePersistentDisk = {
+	pdName = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
+	fstype = "ext4"
+      }
+    },
+  ]
 }
 
 resource "google_compute_instance" "turbinia-worker" {
@@ -310,9 +394,13 @@ resource "google_compute_instance" "turbinia-worker" {
   }
 
   metadata = {
-    gce-container-declaration = "spec:\n  containers:\n    - name: turbinia-worker\n      image: '${var.turbinia_docker_image_worker}'\n      volumeMounts:\n        - name: host-path-0\n          mountPath: /dev/\n          readOnly: true\n      securityContext:\n        privileged: true\n      env:\n        - name: TURBINIA_CONF\n          value: \"${local.turbinia_config}\"\n      stdin: true\n      tty: true\n  restartPolicy: Always\n  volumes:\n    - name: host-path-0\n      hostPath:\n        path: /dev\n\n"
+    gce-container-declaration = module.gce-worker-container.metadata_value
     google-logging-enabled = "true"
     google-monitoring-enabled = "true"
+  }
+
+  labels = {
+    container-vm = module.gce-worker-container.vm_container_label
   }
 
   service_account {
