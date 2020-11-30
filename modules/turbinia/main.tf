@@ -322,7 +322,7 @@ resource "google_compute_instance" "turbinia-server" {
 # # Turbinia worker
 resource "google_compute_disk" "pd" {
   count   = var.turbinia_worker_count
-  project = var.project_id
+  project = var.gcp_project
   name    = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
   type    = "pd-standard"
   zone    = var.gcp_zone
@@ -331,9 +331,10 @@ resource "google_compute_disk" "pd" {
 
 module "gce-worker-container" {
   source = "terraform-google-modules/container-vm/google"
+  count  = var.turbinia_worker_count
 
   container = {
-    name    = "turbinia-worker"
+    name    = "turbinia-worker-container-${count.index}"
     image   = var.turbinia_docker_image_worker
     volumeMounts = [
       {
@@ -394,13 +395,13 @@ resource "google_compute_instance" "turbinia-worker" {
   }
 
   metadata = {
-    gce-container-declaration = module.gce-worker-container.metadata_value
+    gce-container-declaration = module.gce-worker-container[count.index].metadata_value
     google-logging-enabled = "true"
     google-monitoring-enabled = "true"
   }
 
   labels = {
-    container-vm = module.gce-worker-container.vm_container_label
+    container-vm = module.gce-worker-container[count.index].vm_container_label
   }
 
   service_account {
