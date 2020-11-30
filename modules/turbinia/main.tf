@@ -394,6 +394,12 @@ resource "google_compute_instance" "turbinia-worker" {
     }
   }
 
+  attached_disk {
+    source      = google_compute_disk.pd[count.index].self_link
+    device_name = "data-disk-0"
+    mode        = "READ_WRITE"
+  }
+
   metadata = {
     gce-container-declaration = module.gce-worker-container[count.index].metadata_value
     google-logging-enabled = "true"
