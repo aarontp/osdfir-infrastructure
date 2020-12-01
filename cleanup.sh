@@ -78,6 +78,7 @@ elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" |
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+echo "DIR: $DIR"
 cd $DIR
 
 echo "Remove VPC Private Google Access and firewall rule"
@@ -90,14 +91,24 @@ fi
 
 # Remove cloud functions
 echo "Delete Google Cloud functions"
-gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
-gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
-gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
+if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
+  gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
+fi
+if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetask; then
+  gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
+fi
+if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetasks; then
+  gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
+fi
 
 # Disable cloud function services
 echo "Disable GCP services"
-gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudfunctions.googleapis.com
-gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudbuild.googleapis.com
+if gcloud services list |grep cloudfunctions; then
+  gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudfunctions.googleapis.com
+fi
+if gcloud services list |grep cloudbuild; then
+  gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudbuild.googleapis.com
+fi
 
 # Cleanup Datastore indexes
 gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes cleanup $DIR/modules/turbinia/data/index-empty.yaml
