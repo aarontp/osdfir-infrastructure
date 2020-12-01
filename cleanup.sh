@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+
 TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
 
@@ -35,12 +36,13 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
     exit 1
   fi
 fi
-  echo " You are about to destroy resources in this project, are you sure? (y / n) > "
-  read response
-  if [[ $response != "y" && $response != "Y" ]] ; then
-    exit 0
-  fi
+
+echo " You are about to destroy resources in this project, are you sure? (y / n) > "
+read response
+if [[ $response != "y" && $response != "Y" ]] ; then
+  exit 0
 fi
+
 echo "Destroying in project $DEVSHELL_PROJECT_ID"
 
 # Use local `gcloud auth` credentials so no need to cleanup Service Account.
