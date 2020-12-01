@@ -37,7 +37,7 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   fi
 fi
 
-echo " You are about to destroy resources in this project, are you sure? (y / n) > "
+echo " You are about to destroy resources in this project ($DEVSHELL_PROJECT_ID), are you sure? (y / n) > "
 read response
 if [[ $response != "y" && $response != "Y" ]] ; then
   exit 0
