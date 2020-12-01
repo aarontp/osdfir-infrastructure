@@ -246,6 +246,8 @@ data "template_file" "turbinia-config-template" {
     region            = var.gcp_region
     zone              = var.gcp_zone
     turbinia_id       = var.infrastructure_id
+    output_dir        = var.turbinia_output_directory
+    tmp_dir           = var.turbinia_tmp_directory
     pubsub_topic      = google_pubsub_topic.pubsub-topic.name
     pubsub_topic_psq  = google_pubsub_topic.pubsub-topic-psq.name
     bucket            = google_storage_bucket.output-bucket.name
@@ -355,6 +357,12 @@ module "gce-worker-container" {
       {
         name  = "TURBINIA_CONF"
         value = local.turbinia_config
+      }, {
+        name  = "TURBINIA_OUTPUT_DIR"
+        value = var.turbinia_output_directory
+      }, {
+        name  = "TURBINIA_TMP_DIR"
+        value = var.turbinia_tmp_directory
       }
     ]
     tty : true
@@ -381,7 +389,7 @@ resource "google_compute_instance" "turbinia-worker" {
   name         = "turbinia-worker-${var.infrastructure_id}-${count.index}"
   machine_type = var.turbinia_worker_machine_type
   zone         = var.gcp_zone
-  depends_on   = [google_project_service.services, google_compute_instance.turbinia-server]
+  depends_on   = [google_project_service.services, google_compute_instance.turbinia-server, google_compute_disk.pd]
 
   # Allow to stop/start the machine to enable change machine type.
   allow_stopping_for_update = true
@@ -396,7 +404,7 @@ resource "google_compute_instance" "turbinia-worker" {
 
   attached_disk {
     source      = google_compute_disk.pd[count.index].self_link
-    device_name = "data-disk-0"
+    device_name = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
     mode        = "READ_WRITE"
   }
 

@@ -81,3 +81,13 @@ variable "turbinia_pip_source" {
   description = "Source package to use for Pip."
   default     = "turbinia"
 }
+
+variable "turbinia_output_directory" {
+  description = "Local path to write Turbinia output to."
+  default     = "/var/lib/turbinia/output"
+}
+
+variable "turbinia_tmp_directory" {
+  description = "Local path to write Turbinia temporary output to."
+  default     = "/var/lib/turbinia/tmp"
+}
