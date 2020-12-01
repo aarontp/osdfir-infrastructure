@@ -3,12 +3,12 @@
 TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
 
-# if [[ -z "$( which terraform )" ]] ; then
-#   echo "Terraform CLI not found.  Please follow the instructions at "
-#   echo "https://learn.hashicorp.com/tutorials/terraform/install-cli to install"
-#   echo "the terraform CLI first."
-#   exit 1
-# fi
+if [[ -z "$( which terraform )" ]] ; then
+  echo "Terraform CLI not found.  Please follow the instructions at "
+  echo "https://learn.hashicorp.com/tutorials/terraform/install-cli to install"
+  echo "the terraform CLI first."
+  exit 1
+fi
 
 if [[ -z "$( which gcloud )" ]] ; then
   echo "gcloud CLI not found.  Please follow the instructions at "
@@ -36,9 +36,9 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   fi
 fi
 
-echo "Destroying to project $DEVSHELL_PROJECT_ID"
+echo "Destroying in project $DEVSHELL_PROJECT_ID"
 
-# Use local `gcloud auth` credentials rather than creating new Service Account.
+# Use local `gcloud auth` credentials so no need to cleanup Service Account.
 if [[ "$*" != *--use-gcloud-auth* ]] ; then
   SA_NAME="terraform"
   SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
@@ -81,22 +81,22 @@ if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "a
   gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules delete allow-ssh-ingress-from-iap
 fi
 
-# Deploying cloud functions is flaky. Retry until success.
+# Remove cloud functions
 echo "Delete Google Cloud functions"
 gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
 gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
 gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
 
-# Disable cloud functions
+# Disable cloud function services
 echo "Disable GCP services"
 gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudfunctions.googleapis.com
 gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudbuild.googleapis.com
 
-# Run Terraform to setup the rest of the infrastructure
+# Run Terraform to destroy the rest of the infrastructure
 echo "Running Terraform Destroy"
 terraform destroy -auto-approve -var gcp_project=$DEVSHELL_PROJECT_ID
 
-# Turbinia
+# Remove Turbinia virtualenv and configuration
 if [[ "$*" == *--no-virtualenv* ]] ; then
   echo "Not deleting Turbinia virtualenv"
 else
@@ -104,7 +104,6 @@ else
   cd ~
   rm -fr turbinia
 fi
-
 if [[ -a $TURBINIA_CONFIG ]] ; then
   echo "Removing Turbinia configuration file from $TURBINIA_CONFIG"
   rm $TURBINIA_CONFIG
