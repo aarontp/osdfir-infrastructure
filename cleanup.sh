@@ -81,20 +81,20 @@ if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "a
   gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules delete allow-ssh-ingress-from-iap
 fi
 
-# Deploy cloud functions
-echo "Disable GCP services"
-gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudfunctions.googleapis.com
-gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudbuild.googleapis.com
-
 # Deploying cloud functions is flaky. Retry until success.
 echo "Delete Google Cloud functions"
 gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
 gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
 gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
 
+# Disable cloud functions
+echo "Disable GCP services"
+gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudfunctions.googleapis.com
+gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudbuild.googleapis.com
+
 # Run Terraform to setup the rest of the infrastructure
 echo "Running Terraform Destroy"
-terraform destroy -auto-approve
+terraform destroy -auto-approve -var gcp_project=$DEVSHELL_PROJECT_ID
 
 # Turbinia
 if [[ "$*" == *--no-virtualenv* ]] ; then
