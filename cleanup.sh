@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
 
