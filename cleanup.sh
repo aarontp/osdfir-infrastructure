@@ -45,6 +45,42 @@ fi
 
 echo "Destroying in project $DEVSHELL_PROJECT_ID"
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+echo "DIR: $DIR"
+cd $DIR
+
+echo "Remove VPC Private Google Access and firewall rule"
+# Disable "Private Google Access" on default VPC network
+gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update default --region=$TURBINIA_REGION --no-enable-private-ip-google-access
+# Remove IAP firewall access rule
+if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "allow-ssh-ingress-from-iap"; then
+  gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules delete allow-ssh-ingress-from-iap
+fi
+
+# Remove cloud functions
+if [[ "$*" == *--no-cloudfunctions* ]] ; then
+  echo "Delete Google Cloud functions"
+  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
+    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
+  fi
+  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetask; then
+    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
+  fi
+  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetasks; then
+    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
+  fi
+fi
+
+# Cleanup Datastore indexes
+echo "Cleaning up Datastore indexes"
+cp $DIR/modules/turbinia/data/index-empty.yaml index.yaml
+gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes cleanup $DIR/modules/turbinia/data/index.yaml
+rm index.yaml
+
+# Run Terraform to destroy the rest of the infrastructure
+echo "Running Terraform Destroy"
+terraform destroy -auto-approve -var gcp_project=$DEVSHELL_PROJECT_ID
+
 # Use local `gcloud auth` credentials so no need to cleanup Service Account.
 if [[ "$*" != *--use-gcloud-auth* ]] ; then
   SA_NAME="terraform"
@@ -76,41 +112,6 @@ elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" |
   echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default' to log in"
   exit 1
 fi
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-echo "DIR: $DIR"
-cd $DIR
-
-echo "Remove VPC Private Google Access and firewall rule"
-# Disable "Private Google Access" on default VPC network
-gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update default --region=$TURBINIA_REGION --no-enable-private-ip-google-access
-# Remove IAP firewall access rule
-if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "allow-ssh-ingress-from-iap"; then
-  gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules delete allow-ssh-ingress-from-iap
-fi
-
-# Remove cloud functions
-if [[ "$*" == *--no-cloudfunctions* ]] ; then
-  echo "Delete Google Cloud functions"
-  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
-    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
-  fi
-  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetask; then
-    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
-  fi
-  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetasks; then
-    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
-  fi
-fi
-
-# Cleanup Datastore indexes
-cp $DIR/modules/turbinia/data/index-empty.yaml index.yaml
-gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes cleanup $DIR/modules/turbinia/data/index.yaml
-rm index.yaml
-
-# Run Terraform to destroy the rest of the infrastructure
-echo "Running Terraform Destroy"
-terraform destroy -auto-approve -var gcp_project=$DEVSHELL_PROJECT_ID
 
 # Remove Turbinia virtualenv and configuration
 if [[ "$*" == *--no-virtualenv* ]] ; then
