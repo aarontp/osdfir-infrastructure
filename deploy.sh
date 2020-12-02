@@ -123,6 +123,7 @@ while true; do
   gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetasks  --region $TURBINIA_REGION --source modules/turbinia/data/ --runtime nodejs10 --trigger-http --memory 256MB --timeout 60s
 done
 
+
 # Run Terraform to setup the rest of the infrastructure
 terraform init
 if [ $TIMESKETCH -eq "1" ] ; then
