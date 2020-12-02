@@ -58,7 +58,7 @@ if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "a
 fi
 
 # Remove cloud functions
-if [[ "$*" == *--no-cloudfunctions* ]] ; then
+if [[ "$*" != *--no-cloudfunctions* ]] ; then
   echo "Delete Google Cloud functions"
   if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
     gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
