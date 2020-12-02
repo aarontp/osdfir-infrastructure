@@ -107,6 +107,13 @@ if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "a
   gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules create allow-ssh-ingress-from-iap --direction=INGRESS --action=allow --rules=tcp:22 --source-ranges=35.235.240.0/20
 fi
 
+# Enable the Cloud NAT router so VMs have internet connectivity
+if ! gcloud compute routers list | grep nat-router; then
+  echo "Setting up Cloud NAT router"
+  gcloud --project $DEVSHELL_PROJECT_ID compute routers create nat-router --network=default --region=$TURBINIA_REGION
+  gcloud --project $DEVSHELL_PROJECT_ID compute routers nats create nat-config --router-region=$TURBINIA_REGION --router=nat-router --nat-all-subnet-ip-ranges --auto-allocate-nat-external-ips
+fi
+
 # Deploy cloud functions
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable cloudfunctions.googleapis.com
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable cloudbuild.googleapis.com

@@ -57,6 +57,12 @@ if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "a
   gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules delete allow-ssh-ingress-from-iap
 fi
 
+# Remove the Cloud NAT router
+if gcloud compute routers list | grep nat-router; then
+  echo "Removing Cloud NAT router"
+  gcloud -q --project $DEVSHELL_PROJECT_ID compute routers delete nat-router --region=$TURBINIA_REGION
+fi
+
 # Remove cloud functions
 if [[ "$*" != *--no-cloudfunctions* ]] ; then
   echo "Delete Google Cloud functions"
