@@ -37,7 +37,7 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   fi
 fi
 
-echo " You are about to destroy resources in this project ($DEVSHELL_PROJECT_ID), are you sure? (y / n) > "
+echo -n " You are about to destroy resources in this project ($DEVSHELL_PROJECT_ID), are you sure? (y / n) > "
 read response
 if [[ $response != "y" && $response != "Y" ]] ; then
   exit 0
@@ -90,28 +90,23 @@ if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "a
 fi
 
 # Remove cloud functions
-echo "Delete Google Cloud functions"
-if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
-  gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
-fi
-if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetask; then
-  gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
-fi
-if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetasks; then
-  gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
-fi
-
-# Disable cloud function services
-echo "Disable GCP services"
-if gcloud services list |grep cloudfunctions; then
-  gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudfunctions.googleapis.com
-fi
-if gcloud services list |grep cloudbuild; then
-  gcloud -q services --project $DEVSHELL_PROJECT_ID disable cloudbuild.googleapis.com
+if [[ "$*" == *--no-cloudfunctions* ]] ; then
+  echo "Delete Google Cloud functions"
+  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
+    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete gettasks --region $TURBINIA_REGION
+  fi
+  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetask; then
+    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetask --region $TURBINIA_REGION
+  fi
+  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetasks; then
+    gcloud --project $DEVSHELL_PROJECT_ID -q functions delete closetasks  --region $TURBINIA_REGION
+  fi
 fi
 
 # Cleanup Datastore indexes
-gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes cleanup $DIR/modules/turbinia/data/index-empty.yaml
+cp $DIR/modules/turbinia/data/index-empty.yaml index.yaml
+gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes cleanup $DIR/modules/turbinia/data/index.yaml
+rm index.yaml
 
 # Run Terraform to destroy the rest of the infrastructure
 echo "Running Terraform Destroy"
