@@ -73,15 +73,16 @@ if [[ "$*" != *--use-gcloud-auth* ]] ; then
 
   # Grant IAM roles to the service account
   echo "Grant permissions on service account"
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
   gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
   gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/datastore.indexAdmin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
   gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
 
   # Create and fetch the service account key
   echo "Fetch and store service account key"
@@ -97,19 +98,14 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
-
-# Create AppEngine app, if not already exists, in order to activate datastore
-# if ! gcloud services --project $DEVSHELL_PROJECT_ID list | grep appengine; then
-  # gcloud app --project $DEVSHELL_PROJECT_ID create --region=$TURBINIA_REGION
-# fi
-
 # Enable "Private Google Access" on default VPC network so GCE instances without 
 # an External IP can access Google log and monitoring service APIs.
 gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update default --region=$TURBINIA_REGION --enable-private-ip-google-access
 # Allow IAP so that we can still connect to these via gcloud and cloud console.
 # https://cloud.google.com/iap/docs/using-tcp-forwarding#tunneling_with_ssh
-gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules create allow-ssh-ingress-from-iap --direction=INGRESS --action=allow --rules=tcp:22 --source-ranges=35.235.240.0/20
-
+if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "allow-ssh-ingress-from-iap"; then
+  gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules create allow-ssh-ingress-from-iap --direction=INGRESS --action=allow --rules=tcp:22 --source-ranges=35.235.240.0/20
+fi
 
 # Deploy cloud functions
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable cloudfunctions.googleapis.com
