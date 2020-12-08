@@ -102,6 +102,8 @@ data "template_file" "turbinia-config-template" {
     region            = var.gcp_region
     zone              = var.gcp_zone
     turbinia_id       = var.infrastructure_id
+    output_dir        = var.turbinia_output_directory
+    tmp_dir           = var.turbinia_tmp_directory
     pubsub_topic      = google_pubsub_topic.pubsub-topic.name
     pubsub_topic_psq  = google_pubsub_topic.pubsub-topic-psq.name
     bucket            = google_storage_bucket.output-bucket.name
@@ -114,6 +116,29 @@ locals {
 }
 
 # # Turbinia server
+module "gce-server-container" {
+  source = "terraform-google-modules/container-vm/google"
+
+  container = {
+    name    = "turbinia-server"
+    image   = var.turbinia_docker_image_server
+
+    securityContext = {
+      privileged : false
+    }
+    env = [
+      {
+        name  = "TURBINIA_CONF"
+        value = local.turbinia_config
+      }
+    ]
+    tty : true
+    stdin : true
+  }
+
+  restart_policy = "Always"
+}
+
 resource "google_compute_instance" "turbinia-server" {
   count        = var.turbinia_server_count
   name         = "turbinia-server-${var.infrastructure_id}"
@@ -133,9 +158,13 @@ resource "google_compute_instance" "turbinia-server" {
   }
 
   metadata = {
-    gce-container-declaration = "spec:\n  containers:\n    - name: turbinia-server\n      image: '${var.turbinia_docker_image_server}'\n      securityContext:\n        privileged: false\n      env:\n        - name: TURBINIA_CONF\n          value: \"${local.turbinia_config}\"\n      stdin: true\n      tty: true\n  restartPolicy: Always\n\n"
+    gce-container-declaration = module.gce-server-container.metadata_value
     google-logging-enabled = "true"
     google-monitoring-enabled = "true"
+  }
+
+  labels = {
+    container-vm = module.gce-server-container.vm_container_label
   }
 
   service_account {
@@ -147,12 +176,76 @@ resource "google_compute_instance" "turbinia-server" {
   }
 }
 
+
+# # Turbinia worker
+resource "google_compute_disk" "pd" {
+  count   = var.turbinia_worker_count
+  project = var.gcp_project
+  name    = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
+  type    = "pd-standard"
+  zone    = var.gcp_zone
+  size    = 1000
+}
+
+module "gce-worker-container" {
+  source = "terraform-google-modules/container-vm/google"
+  count  = var.turbinia_worker_count
+
+  container = {
+    name    = "turbinia-worker-container-${count.index}"
+    image   = var.turbinia_docker_image_worker
+    volumeMounts = [
+      {
+        name: "host-path-0"
+        mountPath: "/dev"
+        readOnly: true
+      }, {
+        name: "data-disk-0"
+        mountPath: "/var/lib/turbinia"
+        readOnly: false
+      }
+    ]
+
+    securityContext = {
+      privileged : true
+    }
+    env = [
+      {
+        name  = "TURBINIA_CONF"
+        value = local.turbinia_config
+      }, {
+        name  = "TURBINIA_OUTPUT_DIR"
+        value = var.turbinia_output_directory
+      }, {
+        name  = "TURBINIA_TMP_DIR"
+        value = var.turbinia_tmp_directory
+      }
+    ]
+    tty : true
+    stdin : true
+  }
+
+  restart_policy = "Always"
+  volumes = [
+    {
+      name = "host-path-0"
+      hostPath = {path="/dev"}
+    }, {
+      name = "data-disk-0"
+      gcePersistentDisk = {
+	pdName = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
+	fstype = "ext4"
+      }
+    },
+  ]
+}
+
 resource "google_compute_instance" "turbinia-worker" {
   count        = var.turbinia_worker_count
   name         = "turbinia-worker-${var.infrastructure_id}-${count.index}"
   machine_type = var.turbinia_worker_machine_type
   zone         = var.gcp_zone
-  depends_on   = [google_project_service.services, google_compute_instance.turbinia-server]
+  depends_on   = [google_project_service.services, google_compute_instance.turbinia-server, google_compute_disk.pd]
 
   # Allow to stop/start the machine to enable change machine type.
   allow_stopping_for_update = true
@@ -165,10 +258,20 @@ resource "google_compute_instance" "turbinia-worker" {
     }
   }
 
+  attached_disk {
+    source      = google_compute_disk.pd[count.index].self_link
+    device_name = "turbinia-worker-${var.infrastructure_id}-${count.index}-data-disk"
+    mode        = "READ_WRITE"
+  }
+
   metadata = {
-    gce-container-declaration = "spec:\n  containers:\n    - name: turbinia-worker\n      image: '${var.turbinia_docker_image_worker}'\n      volumeMounts:\n        - name: host-path-0\n          mountPath: /dev/\n          readOnly: true\n      securityContext:\n        privileged: true\n      env:\n        - name: TURBINIA_CONF\n          value: \"${local.turbinia_config}\"\n      stdin: true\n      tty: true\n  restartPolicy: Always\n  volumes:\n    - name: host-path-0\n      hostPath:\n        path: /dev\n\n"
+    gce-container-declaration = module.gce-worker-container[count.index].metadata_value
     google-logging-enabled = "true"
     google-monitoring-enabled = "true"
+  }
+
+  labels = {
+    container-vm = module.gce-worker-container[count.index].vm_container_label
   }
 
   service_account {
