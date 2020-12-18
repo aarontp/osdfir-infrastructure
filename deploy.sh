@@ -138,6 +138,7 @@ fi
 
 # Deploy Datastore indexes
 if [[ "$*" != *--no-datastore* ]] ; then
+  gcloud --project $DEVSHELL_PROJECT_ID -q services enable datastore.googleapis.com
   gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes create $DIR/modules/turbinia/data/index.yaml
 fi
 
