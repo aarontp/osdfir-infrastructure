@@ -17,6 +17,7 @@
 locals {
   # API services to enable for the project
   services_list = [
+    "clouderrorreporting.googleapis.com",
     "compute.googleapis.com",
     "datastore.googleapis.com",
     "iam.googleapis.com",
