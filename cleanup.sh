@@ -3,6 +3,18 @@ set -e
 
 TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
+VPC_NETWORK="default"
+
+if [[ "$*" == *--help ]] ; then
+  echo "Terraform cleanup script for Turbinia and Timesketch"
+  echo "Options:"
+  echo "--use-gcloud-auth              Use gcloud authentication instead of a service key"
+  echo "--no-cloudnat                  Do not cleanup the Cloud NAT router"
+  echo "--no-cloudfunctions            Do not cleanup Turbinia Cloud Functions"
+  echo "--no-datastore                 Do not cleanup Turbinia Datastore"
+  echo "--no-virtualenv                Do not remove the Turbinia client in a virtual env"
+  exit 1
+fi
 
 if [[ -z "$( which terraform )" ]] ; then
   echo "Terraform CLI not found.  Please follow the instructions at "
@@ -51,7 +63,7 @@ cd $DIR
 
 echo "Remove VPC Private Google Access and firewall rule"
 # Disable "Private Google Access" on default VPC network
-gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update default --region=$TURBINIA_REGION --no-enable-private-ip-google-access
+gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update $VPC_NETWORK --region=$TURBINIA_REGION --no-enable-private-ip-google-access
 # Remove IAP firewall access rule
 if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "allow-ssh-ingress-from-iap"; then
   gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules delete allow-ssh-ingress-from-iap

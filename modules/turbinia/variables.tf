@@ -91,3 +91,8 @@ variable "turbinia_tmp_directory" {
   description = "Local path to write Turbinia temporary output to."
   default     = "/var/lib/turbinia/tmp"
 }
+
+variable "vpc_network" {
+  description = "The VPC network the stack will be configured in"
+  default = "default"
+}

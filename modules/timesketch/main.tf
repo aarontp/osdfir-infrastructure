@@ -73,7 +73,7 @@ resource "google_compute_instance" "elasticsearch" {
 
   # Assign a generated public IP address. Needed for SSH access.
   network_interface {
-    network       = "default"
+    network       = var.vpc_network
     access_config {}
   }
 
@@ -176,7 +176,7 @@ resource "google_compute_address" "timesketch-server-address" {
 
 resource "google_compute_firewall" "allow-external-timesketch-server" {
   name    = "allow-external-timesketch-https-server"
-  network = "default"
+  network = var.vpc_network
   allow {
     protocol = "tcp"
     ports    = ["443"]
@@ -205,7 +205,7 @@ resource "google_compute_instance" "timesketch-server" {
 
   # Assign a generated public IP address. Needed for SSH access.
   network_interface {
-    network       = "default"
+    network       = var.vpc_network
 
     access_config {
       nat_ip = google_compute_address.timesketch-server-address.address
