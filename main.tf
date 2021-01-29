@@ -43,6 +43,7 @@ module "timesketch" {
   gcp_zone                     = var.gcp_zone
   gcp_ubuntu_1804_image        = var.gcp_ubuntu_1804_image
   infrastructure_id            = coalesce(var.infrastructure_id, random_id.infrastructure-random-id.hex)
+  vcp_network                  = var.vcp_network
 }
 
 #------------#
@@ -56,6 +57,7 @@ module "turbinia" {
   infrastructure_id            = coalesce(var.infrastructure_id, random_id.infrastructure-random-id.hex)
   turbinia_docker_image_server = var.turbinia_docker_image_server
   turbinia_docker_image_worker = var.turbinia_docker_image_worker
+  vcp_network                  = var.vcp_network
 }
 
 # Random ID for creating unique resource names.

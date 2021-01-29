@@ -47,3 +47,8 @@ variable "turbinia_docker_image_worker" {
   description = "The docker image to use for the Turbinia Worker"
   default = "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest"
 }
+
+variable "vpc_network" {
+  description = "The VPC network the stack will be configured in"
+  default = "default"
+}

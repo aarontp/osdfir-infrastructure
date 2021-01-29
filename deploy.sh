@@ -4,6 +4,7 @@ set -e
 
 TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
+VPC_NETWORK='default'
 
 if [[ -z "$( which terraform )" ]] ; then
   echo "Terraform CLI not found.  Please follow the instructions at "
@@ -36,6 +37,13 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
     echo $ERRMSG
     exit 1
   fi
+fi
+
+# Check if the configured VPC network exists.
+networks=$(gcloud -q compute networks list --filter="name=$VPC_NETWORK" |wc -l)
+if [[ "${networks}" -lt "2" ]]; then
+        echo "ERROR: VPC network $VPC_NETWORK not found, please create this first."
+        exit 1
 fi
 
 echo "Deploying to project $DEVSHELL_PROJECT_ID"
@@ -145,9 +153,9 @@ fi
 # Run Terraform to setup the rest of the infrastructure
 terraform init
 if [ $TIMESKETCH -eq "1" ] ; then
-  terraform apply -var gcp_project=$DEVSHELL_PROJECT_ID $DOCKER_IMAGE -auto-approve
+  terraform apply -var gcp_project=$DEVSHELL_PROJECT_ID $DOCKER_IMAGE -var vpc_network=$VPC_NETWORK -auto-approve
 else
-  terraform apply --target=module.turbinia -var gcp_project=$DEVSHELL_PROJECT_ID $DOCKER_IMAGE -auto-approve
+  terraform apply --target=module.turbinia -var gcp_project=$DEVSHELL_PROJECT_ID $DOCKER_IMAGE -var vpc_network=$VPC_NETWORK  -auto-approve
 fi
 
 

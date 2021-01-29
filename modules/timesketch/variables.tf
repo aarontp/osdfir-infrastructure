@@ -71,3 +71,8 @@ variable "elasticsearch_node_count" {
   description = "Number of Elasticsearch cluster machines"
   default     = 2
 }
+
+variable "vpc_network" {
+  description = "The VPC network the stack will be configured in"
+  default = "default"
+}
