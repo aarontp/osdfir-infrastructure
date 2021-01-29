@@ -6,6 +6,21 @@ TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
 VPC_NETWORK='default'
 
+if [[ "$*" == *--help ]] ; then
+  echo "Terraform deployment script for Turbinia and Timesketch"
+  echo "Options:"
+  echo "--no-timesketch                Do not deploy timesketch"
+  echo "--build-release-test           Deploy Turbinia release test docker image"
+  echo "--build-dev                    Deploy Turbinia development docker image"
+  echo "--build-experimental           Deploy Turbinia experimental docker image"
+  echo "--use-gcloud-auth              Use gcloud authentication instead of a service key"
+  echo "--no-cloudnat                  Do not deploy a Cloud NAT router"
+  echo "--no-cloudfunctions            Do not deploy Turbinia Cloud Functions"
+  echo "--no-datastore                 Do not configure Turbinia Datastore"
+  echo "--no-virtualenv                Do not install the Turbinia client in a virtual env"
+  exit 1
+fi
+
 if [[ -z "$( which terraform )" ]] ; then
   echo "Terraform CLI not found.  Please follow the instructions at "
   echo "https://learn.hashicorp.com/tutorials/terraform/install-cli to install"
@@ -110,7 +125,7 @@ cd $DIR
 
 # Enable "Private Google Access" on default VPC network so GCE instances without 
 # an External IP can access Google log and monitoring service APIs.
-gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update default --region=$TURBINIA_REGION --enable-private-ip-google-access
+gcloud compute --project $DEVSHELL_PROJECT_ID networks subnets update $VPC_NETWORK --region=$TURBINIA_REGION --enable-private-ip-google-access
 # Allow IAP so that we can still connect to these via gcloud and cloud console.
 # https://cloud.google.com/iap/docs/using-tcp-forwarding#tunneling_with_ssh
 if ! gcloud compute --project $DEVSHELL_PROJECT_ID firewall-rules list | grep "allow-ssh-ingress-from-iap"; then
@@ -121,7 +136,7 @@ fi
 if [[ "$*" != *--no-cloudnat* ]] ; then
   if ! gcloud compute routers list | grep nat-router; then
     echo "Setting up Cloud NAT router"
-    gcloud --project $DEVSHELL_PROJECT_ID compute routers create nat-router --network=default --region=$TURBINIA_REGION
+    gcloud --project $DEVSHELL_PROJECT_ID compute routers create nat-router --network=$VPC_NETWORK --region=$TURBINIA_REGION
     gcloud --project $DEVSHELL_PROJECT_ID compute routers nats create nat-config --router-region=$TURBINIA_REGION --router=nat-router --nat-all-subnet-ip-ranges --auto-allocate-nat-external-ips
   fi
 fi
