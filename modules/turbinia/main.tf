@@ -155,6 +155,7 @@ resource "google_compute_instance" "turbinia-server" {
     initialize_params {
       image = var.container_base_image
       type = "pd-standard"
+      size = 100
     }
   }
 
@@ -257,6 +258,7 @@ resource "google_compute_instance" "turbinia-worker" {
     initialize_params {
       image = var.container_base_image
       type = "pd-standard"
+      size = 100
     }
   }
 
