@@ -4,7 +4,7 @@ set -e
 
 TURBINIA_CONFIG="$HOME/.turbiniarc"
 TURBINIA_REGION=us-central1
-VPC_NETWORK="default-vpc"
+VPC_NETWORK="default"
 
 if [[ "$*" == *--help ]] ; then
   echo "Terraform deployment script for Turbinia and Timesketch"
